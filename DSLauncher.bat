@@ -18,7 +18,7 @@ IF NOT [%1]==[] (
     GOTO :Loop
 )
 
-ECHO Arguments: %TITLEARGS%
+IF DEFINED TITLEARGS ECHO Arguments: %TITLEARGS%
 
 :: Check minimum viable vars are set
 IF NOT DEFINED TITLEPLAT (
