@@ -71,6 +71,7 @@ IF DEFINED CUSTOMDSPATH (
 
 :: Get correct exe name based on TITLENAME+TITLEPLAT
 :: 32-bit executables
+IF %TITLEPLAT%==chihiro     SET DSEXE=DemulShooter.exe
 IF %TITLEPLAT%==model2      SET DSEXE=DemulShooter.exe
 IF %TITLEPLAT%==demul107a   SET DSEXE=DemulShooter.exe
 IF %TITLEPLAT%==dolphin5    SET DSEXE=DemulShooter.exe
@@ -96,7 +97,7 @@ IF %TITLEPLAT%==windows (
     IF %TITLENAME%==hotdra  SET DSEXE=DemulShooterX64.exe
     IF NOT DEFINED DSEXE    SET DSEXE=DemulShooter.exe
 )
-:: 64-bit TITLEEXEcutables
+:: 64-bit executables
 IF %TITLEPLAT%==alls        SET DSEXE=DemulShooterX64.exe
 IF %TITLEPLAT%==arcadepc    SET DSEXE=DemulShooterX64.exe
 IF %TITLEPLAT%==es3         SET DSEXE=DemulShooterX64.exe
@@ -114,7 +115,7 @@ IF NOT DEFINED DSEXE (
 IF NOT DEFINED DSARGS (
          ECHO Starting %DSEXE% for %TITLEPLAT%:%TITLENAME%
 ) ELSE ( ECHO Starting %DSEXE% for %TITLEPLAT%:%TITLENAME% w/ %DSARGS% )
-START /b %DSEXE% -target=%TITLEPLAT% -rom=%TITLENAME% %DSARGS%
+START /b %DSEXE% -target=%TITLEPLAT% -rom=%TITLENAME% %CUSTOMDSPROF% %DSARGS%
 
 :: CD to game path
 %TITLEDRIVE%
@@ -128,12 +129,12 @@ IF %TITLEPLAT%==model2 IF NOT DEFINED TITLEARGS (
 
 :: Really pedantic printout
 IF NOT DEFINED TITLEARGS (
-         ECHO Starting %TITLEEXE%
-) ELSE ( ECHO Starting %TITLEEXE% %TITLEARGS% )
+         ECHO Starting "%TITLEEXE%"
+) ELSE ( ECHO Starting "%TITLEEXE%" %TITLEARGS% )
 
 :: Start game
 
-START /wait %TITLEEXE% %TITLEARGS%
+START /wait "" "%TITLEEXE%" %TITLEARGS%
 EXIT /B %ERRORLEVEL%
 
 :::: END OF MAIN PROGRAM
@@ -157,6 +158,11 @@ IF /i "%~1"=="-dspath" IF NOT [%2]==[] IF EXIST "%~f2" (
     IF DEFINED DSSCRIPT_DEBUG ECHO Set custom DemulShooter path to %~f2
     EXIT /B 0
 )
+IF /i "%~1"=="-dsconfig" IF NOT [%~x2]==[] (
+    SET CUSTOMDSPROF=-profile="%~nx2"
+    IF DEFINED DSSCRIPT_DEBUG ECHO Set custom DemulShooter profile to %~nx2
+    EXIT /B 0
+) ELSE ECHO Custom DemulShooter profile is not a valid .ini file! Make sure argument ends in .ini
 IF /i "%~1"=="-dsarg" IF NOT [%2]==[] (
     SET DSARGS=%~2 %DSARGS%
     IF DEFINED DSSCRIPT_DEBUG ECHO Set custom DemulShooter argument -%~2
@@ -174,7 +180,9 @@ IF NOT DEFINED TITLEPATH (
 IF NOT DEFINED TITLEARGS (
     :: CMD parser seems to have issues with '=', and we can't fix it here
     :: But any text after '=' becomes the next argument.
-    SET TITLEARGS=%~1
+    IF EXIST "%~f1" (
+            SET TITLEARGS="%~f1"
+    )  ELSE SET TITLEARGS=%~1
     EXIT /B 1
 ) ELSE (
     :: Check last argument if it's got double-dash, and add equals sign
@@ -184,7 +192,9 @@ IF NOT DEFINED TITLEARGS (
         IF DEFINED DSSCRIPT_DEBUG ECHO Concatenating previous argument to %TITLEARGS%=%~1
         EXIT /B 1
     )
-    SET TITLEARGS=%TITLEARGS% %~1
+    IF EXIST "%~f1" (
+           SET TITLEARGS=%TITLEARGS% "%~f1"
+    ) ELSE SET TITLEARGS=%TITLEARGS% %~1
     IF DEFINED DSSCRIPT_DEBUG ECHO Adding argument %~1
     EXIT /B 1
 )
@@ -195,6 +205,7 @@ ECHO Launches specified game/emulator with DemulShooter.
 ECHO.
 ECHO DSLauncher     -dsplatform ^<platform^> -dsrom ^<rom^>
 ECHO                [-dspath ^<X:\path\to\DemulShooter.exe^>]
+ECHO                [-dsconfig ^<customProfile.ini^>]
 ECHO                [-dsarg argument] [-dsarg argument2] [...]
 ECHO                ^<X:\path\to\game.exe^> [arg] [-arg] [--arg=Arg] [...]
 ECHO.
@@ -202,6 +213,8 @@ ECHO  -dsplatform          Name of platform to pass to DemulShooter.*
 ECHO  -dsrom               Name of rom to pass to DemulShooter.*
 ECHO  -dspath              User-specified path to DemulShooter.
 ECHO                       When undefined, script defaults to "C:\DemulShooter"
+ECHO  -dsconfig            Filename of custom DemulShooter config to use.
+ECHO                       Custom config is searched in DemulShooter directory.
 ECHO  -dsarg               Defines argument to pass to DemulShooter;
 ECHO                       Can be repeated for multiple arguments.
 ECHO  arg^|-arg^|--arg=Arg   Defines arguments to pass to game.exe.
