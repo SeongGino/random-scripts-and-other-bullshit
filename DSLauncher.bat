@@ -8,7 +8,7 @@
 :Loop -- Main Script Code and loop for args parsing
 IF NOT [%1]==[] (
     :: Get last game argument, if any, in case it needs concatenating
-    IF DEFINED DSSCRIPT_DEBUG IF DEFINED TITLEARGS (
+    IF DEFINED TITLEARGS (
         FOR %%a IN (%TITLEARGS%) DO SET LASTTITLEARG=%%a
     )
     :: In case user accidentally left extra - for a DemulShooter arg
